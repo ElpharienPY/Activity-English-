@@ -188,6 +188,27 @@
         .ai-detail-line.best strong { color: #FFDF00; }
         .ai-detail-line.worst strong { color: #ff6b6b; }
 
+        .ai-combos {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 80px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease 0.5s;
+        }
+        .ai-combos.reveal { opacity: 1; }
+        .ai-combo-tag {
+            font-size: 0.78rem;
+            font-family: var(--font-title);
+            padding: 2px 8px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+        }
+        .ai-combo-tag.bonus { background: rgba(255,223,0,0.15); color: #FFDF00; border: 1px solid rgba(255,223,0,0.3); }
+        .ai-combo-tag.malus { background: rgba(255,107,107,0.15); color: #ff6b6b; border: 1px solid rgba(255,107,107,0.3); }
+
         .ai-rank {
             font-size: 1.3rem;
             font-weight: bold;
@@ -243,6 +264,7 @@
                 <div class="ai-detail-line best">MEILLEUR CHOIX : <strong id="ai-best"></strong></div>
                 <div class="ai-detail-line worst">MAILLON FAIBLE : <strong id="ai-worst"></strong></div>
             </div>
+            <div class="ai-combos" id="ai-combos"></div>
         </div>
 
         <section class="left-panel">
@@ -290,19 +312,19 @@
                 title: "LEFT BACK",
                 players: [
                     { name: "Kurzawa", flag: "🇫🇷", type: "silver", psgRating: 68, wikiQuery: "Layvin Kurzawa" },
-                    { name: "Maxwell", flag: "🇧🇷", type: "gold", psgRating: 91, wikiQuery: "Maxwell (football)" },
+                    { name: "Maxwell", flag: "🇧🇷", type: "gold", psgRating: 80, wikiQuery: "Maxwell (football)" },
                     { name: "Bernat", flag: "🇪🇸", type: "silver", psgRating: 75, wikiQuery: "Juan Bernat" },
                     { name: "Mendes", flag: "🇵🇹", type: "gold", psgRating: 84, wikiQuery: "Nuno Mendes" },
-                    { name: "Hernandez", flag: "🇫🇷", type: "silver", psgRating: 65, wikiQuery: "Lucas Hernandez" }
+                    { name: "Hernandez", flag: "🇫🇷", type: "silver", psgRating: 75, wikiQuery: "Lucas Hernandez" }
                 ]
             },
             "LCB": {
                 title: "CENTER BACK (L)",
                 players: [
-                    { name: "Sakho", flag: "🇫🇷", type: "gold", psgRating: 79, wikiQuery: "Mamadou Sakho" },
-                    { name: "Diallo", flag: "🇧🇷", type: "silver", psgRating: 71, wikiQuery: "Abdou Diallo" },
-                    { name: "Kimpembe", flag: "🇫🇷", type: "gold", psgRating: 81, wikiQuery: "Presnel Kimpembe" },
-                    { name: "Pacho", flag: "🇪🇨", type: "silver", psgRating: 76, wikiQuery: "Willian Pacho" },
+                    { name: "Sakho", flag: "🇫🇷", type: "gold", psgRating: 76, wikiQuery: "Mamadou Sakho" },
+                    { name: "Diallo", flag: "🇧🇷", type: "silver", psgRating: 69, wikiQuery: "Abdou Diallo" },
+                    { name: "Kimpembe", flag: "🇫🇷", type: "gold", psgRating: 76, wikiQuery: "Presnel Kimpembe" },
+                    { name: "Pacho", flag: "🇪🇨", type: "silver", psgRating: 87, wikiQuery: "Willian Pacho" },
                     { name: "Luiz", flag: "🇧🇷", type: "silver", psgRating: 78, wikiQuery: "David Luiz" }
                 ]
             },
@@ -313,14 +335,14 @@
                     { name: "T. Silva", flag: "🇧🇷", type: "gold", psgRating: 94, wikiQuery: "Thiago Silva" },
                     { name: "Pochettino", flag: "🇮🇹", type: "silver", psgRating: 42, wikiQuery: "Mauricio Pochettino" }, // jamais joué au PSG
                     { name: "Ramos", flag: "🇪🇸", type: "gold", psgRating: 64, wikiQuery: "Sergio Ramos" }, // 11 matchs en 2 saisons
-                    { name: "Zabarnyi", flag: "🇺🇦", type: "silver", psgRating: 73, wikiQuery: "Illya Zabarnyi" }
+                    { name: "Zabarnyi", flag: "🇺🇦", type: "silver", psgRating: 60, wikiQuery: "Illya Zabarnyi" }
                 ]
             },
             "RB": {
                 title: "RIGHT BACK",
                 players: [
                     { name: "Hakimi", flag: "🇲🇦", type: "gold", psgRating: 92, wikiQuery: "Achraf Hakimi" },
-                    { name: "Dani Alves", flag: "🇧🇷", type: "gold", psgRating: 87, wikiQuery: "Dani Alves" },
+                    { name: "Dani Alves", flag: "🇧🇷", type: "gold", psgRating: 79, wikiQuery: "Dani Alves" },
                     { name: "V.d. Wiel", flag: "🇳🇱", type: "silver", psgRating: 74, wikiQuery: "Gregory van der Wiel" },
                     { name: "Aurier", flag: "🇨🇮", type: "silver", psgRating: 70, wikiQuery: "Serge Aurier" },
                     { name: "Meunier", flag: "🇧🇪", type: "silver", psgRating: 72, wikiQuery: "Thomas Meunier" }
@@ -329,8 +351,8 @@
             "CDM": {
                 title: "DEFENSIVE MID",
                 players: [
-                    { name: "Verratti", flag: "🇮🇹", type: "gold", psgRating: 93, wikiQuery: "Marco Verratti" },
-                    { name: "Makélélé", flag: "🇫🇷", type: "gold", psgRating: 87, wikiQuery: "Claude Makélélé" },
+                    { name: "Verratti", flag: "🇮🇹", type: "gold", psgRating: 90, wikiQuery: "Marco Verratti" },
+                    { name: "Makélélé", flag: "🇫🇷", type: "gold", psgRating: 76, wikiQuery: "Claude Makélélé" },
                     { name: "Motta", flag: "🇮🇹", type: "gold", psgRating: 85, wikiQuery: "Thiago Motta" },
                     { name: "Matuidi", flag: "🇫🇷", type: "silver", psgRating: 83, wikiQuery: "Blaise Matuidi" },
                     { name: "Vitinha", flag: "🇵🇹", type: "gold", psgRating: 89, wikiQuery: "Vitinha" }
@@ -339,8 +361,8 @@
             "LCM": {
                 title: "CENTER MID (L)",
                 players: [
-                    { name: "Ronaldinho", flag: "🇧🇷", type: "gold", psgRating: 89, wikiQuery: "Ronaldinho" },
-                    { name: "Verratti", flag: "🇮🇹", type: "gold", psgRating: 89, wikiQuery: "Marco Verratti" },
+                    { name: "Ronaldinho", flag: "🇧🇷", type: "gold", psgRating: 86, wikiQuery: "Ronaldinho" },
+                    { name: "Verratti", flag: "🇮🇹", type: "gold", psgRating: 90, wikiQuery: "Marco Verratti" },
                     { name: "Pastore", flag: "🇦🇷", type: "gold", psgRating: 86, wikiQuery: "Javier Pastore" },
                     { name: "Doué", flag: "🇫🇷", type: "gold", psgRating: 83, wikiQuery: "Désiré Doué" },
                     { name: "Kang-In", flag: "🇰🇷", type: "silver", psgRating: 74, wikiQuery: "Lee Kang-in" }
@@ -352,7 +374,7 @@
                     { name: "Rabiot", flag: "🇫🇷", type: "silver", psgRating: 74, wikiQuery: "Adrien Rabiot" },
                     { name: "Gueye", flag: "🇸🇳", type: "silver", psgRating: 78, wikiQuery: "Idrissa Gueye" },
                     { name: "F. Ruiz", flag: "🇪🇸", type: "gold", psgRating: 82, wikiQuery: "Fabián Ruiz" },
-                    { name: "J. Neves", flag: "🇵🇹", type: "silver", psgRating: 77, wikiQuery: "João Neves" },
+                    { name: "J. Neves", flag: "🇵🇹", type: "silver", psgRating: 83, wikiQuery: "João Neves" },
                     { name: "Zaïre-Emery", flag: "🇫🇷", type: "silver", psgRating: 83, wikiQuery: "Warren Zaïre-Emery" }
                 ]
             },
@@ -360,8 +382,8 @@
                 title: "LEFT WINGER",
                 players: [
                     { name: "Neymar Jr", flag: "🇧🇷", type: "gold", psgRating: 90, wikiQuery: "Neymar" },
-                    { name: "Kvaratskhelia", flag: "🇬🇪", type: "gold", psgRating: 79, wikiQuery: "Khvicha Kvaratskhelia" },
-                    { name: "Lavezzi", flag: "🇦🇷", type: "silver", psgRating: 83, wikiQuery: "Ezequiel Lavezzi" },
+                    { name: "Kvaratskhelia", flag: "🇬🇪", type: "gold", psgRating: 86, wikiQuery: "Khvicha Kvaratskhelia" },
+                    { name: "Lavezzi", flag: "🇦🇷", type: "silver", psgRating: 80, wikiQuery: "Ezequiel Lavezzi" },
                     { name: "Rothen", flag: "🇫🇷", type: "silver", psgRating: 77, wikiQuery: "Jérôme Rothen" },
                     { name: "Sušić", flag: "🇧🇦", type: "gold", psgRating: 87, wikiQuery: "Safet Sušić" }
                 ]
@@ -380,10 +402,10 @@
                 title: "RIGHT WINGER",
                 players: [
                     { name: "Messi", flag: "🇦🇷", type: "gold", psgRating: 67, wikiQuery: "Lionel Messi" }, // 2 saisons décevantes
-                    { name: "Barcola", flag: "🇫🇷", type: "silver", psgRating: 80, wikiQuery: "Bradley Barcola" },
+                    { name: "Barcola", flag: "🇫🇷", type: "silver", psgRating: 83, wikiQuery: "Bradley Barcola" },
                     { name: "Dembélé", flag: "🇫🇷", type: "gold", psgRating: 90, wikiQuery: "Ousmane Dembélé" },
-                    { name: "L. Moura", flag: "🇧🇷", type: "silver", psgRating: 82, wikiQuery: "Lucas Moura" },
-                    { name: "Di María", flag: "🇦🇷", type: "gold", psgRating: 92, wikiQuery: "Ángel Di María" }
+                    { name: "L. Moura", flag: "🇧🇷", type: "silver", psgRating: 80, wikiQuery: "Lucas Moura" },
+                    { name: "Di María", flag: "🇦🇷", type: "gold", psgRating: 89, wikiQuery: "Ángel Di María" }
                 ]
             },
             "COACH": {
@@ -415,6 +437,8 @@
             aiModal.classList.remove('show');
             document.getElementById('ai-rank').classList.remove('reveal');
             document.getElementById('ai-details').classList.remove('reveal');
+            document.getElementById('ai-combos').classList.remove('reveal');
+            document.getElementById('ai-combos').innerHTML = '';
             dropZones.forEach(zone => { zone.innerHTML = ''; zone.classList.remove('filled', 'active-target'); });
             renderStep();
         }
@@ -499,15 +523,56 @@
         });
 
         /* =========================================
+           COMBOS LÉGENDAIRES & MALUS DÉPARTS
+        ========================================= */
+        const legendCombos = [
+            { players: ["Ibrahimović", "Cavani"],              bonus: 5, label: "⚡ IBRA + CAVANI" },
+            { players: ["Marquinhos", "T. Silva"],             bonus: 4, label: "🛡️ MUR BRÉSILIEN" },
+            { players: ["Maxwell", "Neymar Jr"],               bonus: 3, label: "🇧🇷 CONNEXION BRÉ." },
+            { players: ["Hakimi", "Neymar Jr", "Mbappé"],      bonus: 5, label: "🔥 TRIO MSN 2.0" },
+            { players: ["Verratti", "Pastore"],                bonus: 3, label: "🎨 MILIEU CRÉATIF" },
+            { players: ["Cavani", "Di María", "Verratti"],     bonus: 4, label: "👑 ÈRE QSI CLASSIC" },
+            { players: ["Makélélé", "Ronaldinho"],             bonus: 4, label: "✨ LÉGENDES 2000s" },
+        ];
+
+        const shameList = {
+            "Mbappé": { malus: 3, label: "🚪 Départ en free" },
+            "Rabiot": { malus: 2, label: "😤 Conflit direction" },
+        };
+
+        function computeBonusMalus() {
+            const names = droppedPlayers.map(p => p.name);
+            let bonusTotal = 0, malusTotal = 0;
+            const triggeredLabels = [];
+
+            legendCombos.forEach(combo => {
+                if (combo.players.every(n => names.includes(n))) {
+                    bonusTotal += combo.bonus;
+                    triggeredLabels.push(`+${combo.bonus} ${combo.label}`);
+                }
+            });
+
+            droppedPlayers.forEach(p => {
+                if (shameList[p.name]) {
+                    malusTotal += shameList[p.name].malus;
+                    triggeredLabels.push(`-${shameList[p.name].malus} ${shameList[p.name].label}`);
+                }
+            });
+
+            return { bonusTotal, malusTotal, labels: triggeredLabels };
+        }
+
+        /* =========================================
            SYSTÈME DE NOTATION IA (basé sur les joueurs)
         ========================================= */
         function triggerAIRating() {
             roleTitle.innerText = "CALCULATING...";
             container.innerHTML = '';
 
-            // Moyenne des notes PSG de chaque joueur choisi
-            const total = droppedPlayers.reduce((sum, p) => sum + p.psgRating, 0);
-            const finalScore = Math.round(total / droppedPlayers.length);
+            // Moyenne des notes PSG + bonus combos - malus départs
+            const avg = Math.round(droppedPlayers.reduce((sum, p) => sum + p.psgRating, 0) / droppedPlayers.length);
+            const { bonusTotal, malusTotal, labels } = computeBonusMalus();
+            const finalScore = Math.min(99, Math.max(50, avg + bonusTotal - malusTotal));
 
             const best  = droppedPlayers.reduce((a, b) => a.psgRating > b.psgRating ? a : b);
             const worst = droppedPlayers.reduce((a, b) => a.psgRating < b.psgRating ? a : b);
@@ -519,6 +584,12 @@
 
             document.getElementById('ai-best').innerText  = `${best.flag} ${best.name} (${best.psgRating})`;
             document.getElementById('ai-worst').innerText = `${worst.flag} ${worst.name} (${worst.psgRating})`;
+
+            const combosEl = document.getElementById('ai-combos');
+            combosEl.innerHTML = labels.map(l => {
+                const isBonus = l.startsWith('+');
+                return `<span class="ai-combo-tag ${isBonus ? 'bonus' : 'malus'}">${l}</span>`;
+            }).join('');
 
             let currentNumber = 0;
 
@@ -548,6 +619,7 @@
 
                     rankEl.classList.add('reveal');
                     detailEl.classList.add('reveal');
+                    combosEl.classList.add('reveal');
 
                     setTimeout(() => {
                         aiModal.classList.remove('show');
