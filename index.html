@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUILD THE ULTIMATE PSG XI</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* =========================================
+           VARIABLES & RESET
+        ========================================= */
+        :root {
+            --bg-main: #0A0A0A;
+            --psg-red: #E30613;
+            --psg-blue: #004170;
+            --text-light: #F5F5F5;
+            --pitch-green: #0A3A1A;
+            --font-title: 'Impact', 'Arial Black', sans-serif;
+            --font-text: 'Arial', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background-color: var(--bg-main); color: var(--text-light); font-family: var(--font-text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        /* =========================================
+           HEADER
+        ========================================= */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 8px 25px; background: linear-gradient(to right, var(--bg-main), var(--psg-blue), var(--bg-main)); border-bottom: 2px solid var(--psg-red); height: 8vh; min-height: 55px; }
+        .header-titles { display: flex; flex-direction: column; justify-content: center; }
+        h1 { font-family: var(--font-title); color: var(--psg-red); font-size: 1.6rem; letter-spacing: 1px; text-transform: uppercase; text-shadow: 1px 1px 0px var(--bg-main), 2px 2px 0px rgba(0,0,0,0.5); }
+        .subtitle { font-size: 0.85rem; font-style: italic; color: #ccc; }
+        .header-controls { display: flex; align-items: center; gap: 15px; }
+        #counter { font-family: var(--font-title); font-size: 1.3rem; background: rgba(0,0,0,0.5); padding: 5px 12px; border-radius: 6px; border: 1px solid var(--psg-blue); }
+        #btn-reset { background-color: var(--psg-red); color: white; border: none; padding: 8px 16px; font-family: var(--font-title); font-size: 1rem; cursor: pointer; border-radius: 4px; transition: all 0.2s; text-transform: uppercase; }
+        #btn-reset:hover { background-color: #ff1a27; transform: scale(1.05); }
+
+        /* =========================================
+           MAIN LAYOUT
+        ========================================= */
+        main { display: flex; height: 92vh; width: 100%; }
+        .left-panel { width: 65%; position: relative; display: flex; justify-content: center; align-items: center; padding: 15px; }
+        .right-panel { width: 35%; background: linear-gradient(135deg, #111 0%, #1a1a1a 100%); border-left: 2px solid #333; display: flex; flex-direction: column; padding: 15px; }
+
+        /* =========================================
+           TERRAIN DE FOOTBALL
+        ========================================= */
+        .pitch-wrapper { position: relative; width: 100%; max-width: 550px; height: 95%; background-color: var(--pitch-green); border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 5px; }
+        .pitch-line { position: absolute; background-color: rgba(255, 255, 255, 0.3); }
+        .half-way-line { width: 100%; height: 2px; top: 50%; transform: translateY(-50%); }
+        .penalty-box-bottom { width: 50%; height: 15%; bottom: 0; left: 25%; border: 2px solid rgba(255, 255, 255, 0.3); border-bottom: none; position: absolute; }
+        .penalty-box-top { width: 50%; height: 15%; top: 0; left: 25%; border: 2px solid rgba(255, 255, 255, 0.3); border-top: none; position: absolute; }
+        .six-yard-bottom { width: 20%; height: 5%; bottom: 0; left: 40%; border: 2px solid rgba(255, 255, 255, 0.3); border-bottom: none; position: absolute; }
+        .six-yard-top { width: 20%; height: 5%; top: 0; left: 40%; border: 2px solid rgba(255, 255, 255, 0.3); border-top: none; position: absolute; }
+
+        .drop-zone { position: absolute; width: 80px; height: 80px; border: 2px dashed rgba(255, 255, 255, 0.5); border-radius: 50%; display: flex; justify-content: center; align-items: center; transform: translate(-50%, -50%); transition: all 0.3s; z-index: 10; }
+        .drop-zone::after { content: attr(data-label); position: absolute; bottom: -20px; font-family: var(--font-title); font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); text-shadow: 1px 1px 2px black; }
+        .drop-zone.active-target { border-color: var(--psg-red); background-color: rgba(227, 6, 19, 0.2); box-shadow: 0 0 10px var(--psg-red); animation: pulse 1.5s infinite; }
+        .drop-zone.filled { border: none; background: transparent; box-shadow: none; animation: flash-red 0.5s ease-out; }
+        .drop-zone.filled::after { display: none; }
+
+        /* Coordonnées */
+        #drop-GK  { bottom: 4%; left: 50%; }
+        #drop-LB  { bottom: 22%; left: 18%; }
+        #drop-LCB { bottom: 18%; left: 36%; }
+        #drop-RCB { bottom: 18%; left: 64%; }
+        #drop-RB  { bottom: 22%; left: 82%; }
+        #drop-CDM { bottom: 38%; left: 50%; }
+        #drop-LCM { bottom: 52%; left: 32%; }
+        #drop-RCM { bottom: 52%; left: 68%; }
+        #drop-LW  { top: 20%; left: 22%; }
+        #drop-ST  { top: 14%; left: 50%; }
+        #drop-RW  { top: 20%; left: 78%; }
+
+        .coach-area { position: absolute; top: 15px; left: 15px; width: 90px; height: 110px; border: 2px dashed rgba(255,255,255,0.3); display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.4); border-radius: 8px; }
+        .coach-area h3 { font-family: var(--font-title); color: #aaa; margin-bottom: 5px; font-size: 0.9rem; }
+        #drop-COACH { position: relative; width: 60px; height: 60px; transform: none; }
+
+        /* =========================================
+           PANNEAU DROIT (SÉLECTION)
+        ========================================= */
+        .role-title-container { text-align: center; margin-bottom: 15px; }
+        #current-role-title { font-family: var(--font-title); font-size: 1.6rem; color: var(--psg-red); text-transform: uppercase; }
+        #current-role-subtitle { font-size: 0.9rem; color: #aaa; }
+        .cards-grid { display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; align-content: center; flex-grow: 1; }
+
+        /* =========================================
+           CARTES FUT (à droite)
+        ========================================= */
+        .fut-card { width: 120px; height: 175px; position: relative; border-radius: 8px 8px 25px 25px; display: flex; flex-direction: column; align-items: center; cursor: grab; box-shadow: 0 8px 15px rgba(0,0,0,0.6); transition: transform 0.2s, box-shadow 0.2s; overflow: hidden; border: 2px solid transparent; background-color: #1a1a1a; }
+        .fut-card:hover { transform: translateY(-5px); box-shadow: 0 12px 20px rgba(0,0,0,0.8); }
+        .fut-card::before { content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: linear-gradient(to bottom right, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0) 100%); transform: rotate(30deg); pointer-events: none; z-index: 2;}
+
+        .fut-card.gold { background: linear-gradient(135deg, #FFDF00, #D4AF37, #996515); border-color: #FFF8DC; color: #332200; }
+        .fut-card.silver { background: linear-gradient(135deg, #E0E0E0, #BDBDBD, #757575); border-color: #FFFFFF; color: #1a1a1a; }
+
+        .card-top-left { position: absolute; top: 5px; left: 10px; font-size: 1.2rem; z-index: 3;}
+        .card-image-container { width: 65px; height: 65px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.8); margin-top: 25px; overflow: hidden; background-color: #0A0A0A; display: flex; justify-content: center; align-items: center; z-index: 3;}
+        .card-image-container img { width: 100%; height: 100%; object-fit: cover; object-position: top center; pointer-events: none; transition: opacity 0.3s; }
+        .card-name { position: absolute; bottom: 15px; width: 100%; text-align: center; font-family: var(--font-title); font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 0 5px; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); z-index: 3;}
+
+        /* =========================================
+           JOUEUR SUR LE TERRAIN
+        ========================================= */
+        .dropped-player { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+        .dropped-player img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid #fff; object-fit: cover; object-position: top center; box-shadow: 0 4px 8px rgba(0,0,0,0.6); background-color: #1a1a1a; }
+        .dropped-player span { font-family: var(--font-title); font-size: 0.75rem; color: white; background: rgba(0, 0, 0, 0.8); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; text-shadow: none; white-space: nowrap; position: relative; top: -10px; z-index: 4; }
+
+        /* =========================================
+           MODAL RATING IA (Style Glassmorphism/TikTok)
+        ========================================= */
+        #ai-rating-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 320px;
+            background: rgba(15, 15, 15, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,255,255,0.05);
+            border-radius: 24px;
+            padding: 35px 20px;
+            text-align: center;
+            z-index: 200;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+        }
+
+        #ai-rating-modal.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .ai-title {
+            font-family: var(--font-title);
+            color: var(--psg-red);
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(227, 6, 19, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .ai-score-container {
+            display: flex;
+            justify-content: center;
+            align-items: baseline;
+            margin: 15px 0;
+        }
+
+        .ai-score {
+            font-family: var(--font-title);
+            font-size: 5.5rem;
+            color: #fff;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.4);
+            line-height: 1;
+        }
+
+        .ai-percent {
+            font-family: var(--font-title);
+            font-size: 2rem;
+            color: var(--psg-blue);
+            margin-left: 5px;
+        }
+
+        .ai-details {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: all 0.4s ease 0.2s;
+        }
+        .ai-details.reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .ai-detail-line {
+            font-size: 0.85rem;
+            color: #ccc;
+            letter-spacing: 0.5px;
+        }
+        .ai-detail-line strong {
+            font-family: var(--font-title);
+        }
+        .ai-detail-line.best strong { color: #FFDF00; }
+        .ai-detail-line.worst strong { color: #ff6b6b; }
+
+        .ai-rank {
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            min-height: 1.5em;
+            text-transform: uppercase;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s ease;
+        }
+        
+        .ai-rank.reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* =========================================
+           ANIMATIONS & MESSAGES
+        ========================================= */
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(227, 6, 19, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(227, 6, 19, 0); } 100% { box-shadow: 0 0 0 0 rgba(227, 6, 19, 0); } }
+        @keyframes flash-red { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.1); filter: brightness(1.2) drop-shadow(0 0 10px var(--psg-red)); } 100% { transform: scale(1); filter: brightness(1); } }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; border-color: var(--psg-red) !important; background-color: rgba(227, 6, 19, 0.4) !important; }
+        @keyframes shake { 10%, 90% { transform: translate(-50%, -50%) translate3d(-2px, 0, 0); } 20%, 80% { transform: translate(-50%, -50%) translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate(-50%, -50%) translate3d(-6px, 0, 0); } 40%, 60% { transform: translate(-50%, -50%) translate3d(6px, 0, 0); } }
+
+        #end-message { position: absolute; top: 15%; left: 50%; transform: translate(-50%, -50%) scale(0); font-family: var(--font-title); font-size: 5rem; color: var(--text-light); text-shadow: 3px 3px 0px var(--psg-blue), 6px 6px 0px var(--psg-red); text-align: center; z-index: 100; pointer-events: none; opacity: 0; transition: all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); white-space: nowrap; }
+        #end-message.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        .dragging { opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-titles">
+            <h1>BUILD THE ULTIMATE PSG XI</h1>
+            <div class="subtitle">All-time legends — choose your starting eleven</div>
+        </div>
+        <div class="header-controls">
+            <div id="counter">0 / 12</div>
+            <button id="btn-reset">Reset</button>
+        </div>
+    </header>
+
+    <main>
+        <div id="ai-rating-modal">
+            <div class="ai-title">TEAM CHEMISTRY</div>
+            <div class="ai-score-container">
+                <span class="ai-score" id="ai-score">0</span>
+                <span class="ai-percent">/99</span>
+            </div>
+            <div class="ai-rank" id="ai-rank"></div>
+            <div class="ai-details" id="ai-details">
+                <div class="ai-detail-line best">MEILLEUR CHOIX : <strong id="ai-best"></strong></div>
+                <div class="ai-detail-line worst">MAILLON FAIBLE : <strong id="ai-worst"></strong></div>
+            </div>
+        </div>
+
+        <section class="left-panel">
+            <div id="end-message">YOUR ULTIMATE XI</div>
+            <div class="coach-area">
+                <h3>COACH</h3>
+                <div class="drop-zone" id="drop-COACH" data-id="COACH" data-label=""></div>
+            </div>
+            <div class="pitch-wrapper">
+                <div class="pitch-line half-way-line"></div>
+                <div class="penalty-box-bottom"></div><div class="six-yard-bottom"></div>
+                <div class="penalty-box-top"></div><div class="six-yard-top"></div>
+                
+                <div class="drop-zone" id="drop-GK" data-id="GK" data-label="GK"></div>
+                <div class="drop-zone" id="drop-LB" data-id="LB" data-label="LB"></div><div class="drop-zone" id="drop-LCB" data-id="LCB" data-label="CB"></div><div class="drop-zone" id="drop-RCB" data-id="RCB" data-label="CB"></div><div class="drop-zone" id="drop-RB" data-id="RB" data-label="RB"></div>
+                <div class="drop-zone" id="drop-CDM" data-id="CDM" data-label="CDM"></div>
+                <div class="drop-zone" id="drop-LCM" data-id="LCM" data-label="CM"></div><div class="drop-zone" id="drop-RCM" data-id="RCM" data-label="CM"></div>
+                <div class="drop-zone" id="drop-LW" data-id="LW" data-label="LW"></div><div class="drop-zone" id="drop-ST" data-id="ST" data-label="ST"></div><div class="drop-zone" id="drop-RW" data-id="RW" data-label="RW"></div>
+            </div>
+        </section>
+        <section class="right-panel">
+            <div class="role-title-container">
+                <div id="current-role-title">GOALKEEPER</div>
+                <div id="current-role-subtitle">— pick one —</div>
+            </div>
+            <div class="cards-grid" id="cards-container"></div>
+        </section>
+    </main>
+
+    <script>
+        const sequence = ["GK", "LB", "LCB", "RCB", "RB", "CDM", "LCM", "RCM", "LW", "ST", "RW", "COACH"];
+
+        const playerData = {
+            "GK": {
+                title: "GOALKEEPER",
+                players: [
+                    { name: "Buffon", flag: "🇮🇹", type: "gold", psgRating: 72, wikiQuery: "Gianluigi Buffon" },
+                    { name: "Sirigu", flag: "🇮🇹", type: "silver", psgRating: 78, wikiQuery: "Salvatore Sirigu" },
+                    { name: "Lama", flag: "🇫🇷", type: "gold", psgRating: 86, wikiQuery: "Bernard Lama" },
+                    { name: "Donnarumma", flag: "🇮🇹", type: "gold", psgRating: 83, wikiQuery: "Gianluigi Donnarumma" },
+                    { name: "Chevalier", flag: "🇫🇷", type: "silver", psgRating: 38, wikiQuery: "Lucas Chevalier" } // jamais joué au PSG
+                ]
+            },
+            "LB": {
+                title: "LEFT BACK",
+                players: [
+                    { name: "Kurzawa", flag: "🇫🇷", type: "silver", psgRating: 68, wikiQuery: "Layvin Kurzawa" },
+                    { name: "Maxwell", flag: "🇧🇷", type: "gold", psgRating: 91, wikiQuery: "Maxwell (football)" },
+                    { name: "Bernat", flag: "🇪🇸", type: "silver", psgRating: 75, wikiQuery: "Juan Bernat" },
+                    { name: "Mendes", flag: "🇵🇹", type: "gold", psgRating: 84, wikiQuery: "Nuno Mendes" },
+                    { name: "Hernandez", flag: "🇫🇷", type: "silver", psgRating: 65, wikiQuery: "Lucas Hernandez" }
+                ]
+            },
+            "LCB": {
+                title: "CENTER BACK (L)",
+                players: [
+                    { name: "Sakho", flag: "🇫🇷", type: "gold", psgRating: 79, wikiQuery: "Mamadou Sakho" },
+                    { name: "Diallo", flag: "🇧🇷", type: "silver", psgRating: 71, wikiQuery: "Abdou Diallo" },
+                    { name: "Kimpembe", flag: "🇫🇷", type: "gold", psgRating: 81, wikiQuery: "Presnel Kimpembe" },
+                    { name: "Pacho", flag: "🇪🇨", type: "silver", psgRating: 76, wikiQuery: "Willian Pacho" },
+                    { name: "Luiz", flag: "🇧🇷", type: "silver", psgRating: 78, wikiQuery: "David Luiz" }
+                ]
+            },
+            "RCB": {
+                title: "CENTER BACK (R)",
+                players: [
+                    { name: "Marquinhos", flag: "🇧🇷", type: "gold", psgRating: 96, wikiQuery: "Marquinhos" },
+                    { name: "T. Silva", flag: "🇧🇷", type: "gold", psgRating: 94, wikiQuery: "Thiago Silva" },
+                    { name: "Pochettino", flag: "🇮🇹", type: "silver", psgRating: 42, wikiQuery: "Mauricio Pochettino" }, // jamais joué au PSG
+                    { name: "Ramos", flag: "🇪🇸", type: "gold", psgRating: 64, wikiQuery: "Sergio Ramos" }, // 11 matchs en 2 saisons
+                    { name: "Zabarnyi", flag: "🇺🇦", type: "silver", psgRating: 73, wikiQuery: "Illya Zabarnyi" }
+                ]
+            },
+            "RB": {
+                title: "RIGHT BACK",
+                players: [
+                    { name: "Hakimi", flag: "🇲🇦", type: "gold", psgRating: 92, wikiQuery: "Achraf Hakimi" },
+                    { name: "Dani Alves", flag: "🇧🇷", type: "gold", psgRating: 87, wikiQuery: "Dani Alves" },
+                    { name: "V.d. Wiel", flag: "🇳🇱", type: "silver", psgRating: 74, wikiQuery: "Gregory van der Wiel" },
+                    { name: "Aurier", flag: "🇨🇮", type: "silver", psgRating: 70, wikiQuery: "Serge Aurier" },
+                    { name: "Meunier", flag: "🇧🇪", type: "silver", psgRating: 72, wikiQuery: "Thomas Meunier" }
+                ]
+            },
+            "CDM": {
+                title: "DEFENSIVE MID",
+                players: [
+                    { name: "Verratti", flag: "🇮🇹", type: "gold", psgRating: 93, wikiQuery: "Marco Verratti" },
+                    { name: "Makélélé", flag: "🇫🇷", type: "gold", psgRating: 87, wikiQuery: "Claude Makélélé" },
+                    { name: "Motta", flag: "🇮🇹", type: "gold", psgRating: 85, wikiQuery: "Thiago Motta" },
+                    { name: "Matuidi", flag: "🇫🇷", type: "silver", psgRating: 83, wikiQuery: "Blaise Matuidi" },
+                    { name: "Vitinha", flag: "🇵🇹", type: "gold", psgRating: 89, wikiQuery: "Vitinha" }
+                ]
+            },
+            "LCM": {
+                title: "CENTER MID (L)",
+                players: [
+                    { name: "Ronaldinho", flag: "🇧🇷", type: "gold", psgRating: 89, wikiQuery: "Ronaldinho" },
+                    { name: "Verratti", flag: "🇮🇹", type: "gold", psgRating: 89, wikiQuery: "Marco Verratti" },
+                    { name: "Pastore", flag: "🇦🇷", type: "gold", psgRating: 86, wikiQuery: "Javier Pastore" },
+                    { name: "Doué", flag: "🇫🇷", type: "gold", psgRating: 83, wikiQuery: "Désiré Doué" },
+                    { name: "Kang-In", flag: "🇰🇷", type: "silver", psgRating: 74, wikiQuery: "Lee Kang-in" }
+                ]
+            },
+            "RCM": {
+                title: "CENTER MID (R)",
+                players: [
+                    { name: "Rabiot", flag: "🇫🇷", type: "silver", psgRating: 74, wikiQuery: "Adrien Rabiot" },
+                    { name: "Gueye", flag: "🇸🇳", type: "silver", psgRating: 78, wikiQuery: "Idrissa Gueye" },
+                    { name: "F. Ruiz", flag: "🇪🇸", type: "gold", psgRating: 82, wikiQuery: "Fabián Ruiz" },
+                    { name: "J. Neves", flag: "🇵🇹", type: "silver", psgRating: 77, wikiQuery: "João Neves" },
+                    { name: "Zaïre-Emery", flag: "🇫🇷", type: "silver", psgRating: 83, wikiQuery: "Warren Zaïre-Emery" }
+                ]
+            },
+            "LW": {
+                title: "LEFT WINGER",
+                players: [
+                    { name: "Neymar Jr", flag: "🇧🇷", type: "gold", psgRating: 90, wikiQuery: "Neymar" },
+                    { name: "Kvaratskhelia", flag: "🇬🇪", type: "gold", psgRating: 79, wikiQuery: "Khvicha Kvaratskhelia" },
+                    { name: "Lavezzi", flag: "🇦🇷", type: "silver", psgRating: 83, wikiQuery: "Ezequiel Lavezzi" },
+                    { name: "Rothen", flag: "🇫🇷", type: "silver", psgRating: 77, wikiQuery: "Jérôme Rothen" },
+                    { name: "Sušić", flag: "🇧🇦", type: "gold", psgRating: 87, wikiQuery: "Safet Sušić" }
+                ]
+            },
+            "ST": {
+                title: "STRIKER",
+                players: [
+                    { name: "Ibrahimović", flag: "🇸🇪", type: "gold", psgRating: 95, wikiQuery: "Zlatan Ibrahimović" },
+                    { name: "Cavani", flag: "🇺🇾", type: "gold", psgRating: 94, wikiQuery: "Edinson Cavani" },
+                    { name: "Pauleta", flag: "🇵🇹", type: "gold", psgRating: 88, wikiQuery: "Pauleta" },
+                    { name: "Mbappé", flag: "🇫🇷", type: "gold", psgRating: 80, wikiQuery: "Kylian Mbappé" },
+                    { name: "Weah", flag: "🇱🇷", type: "gold", psgRating: 85, wikiQuery: "George Weah" }
+                ]
+            },
+            "RW": {
+                title: "RIGHT WINGER",
+                players: [
+                    { name: "Messi", flag: "🇦🇷", type: "gold", psgRating: 67, wikiQuery: "Lionel Messi" }, // 2 saisons décevantes
+                    { name: "Barcola", flag: "🇫🇷", type: "silver", psgRating: 80, wikiQuery: "Bradley Barcola" },
+                    { name: "Dembélé", flag: "🇫🇷", type: "gold", psgRating: 90, wikiQuery: "Ousmane Dembélé" },
+                    { name: "L. Moura", flag: "🇧🇷", type: "silver", psgRating: 82, wikiQuery: "Lucas Moura" },
+                    { name: "Di María", flag: "🇦🇷", type: "gold", psgRating: 92, wikiQuery: "Ángel Di María" }
+                ]
+            },
+            "COACH": {
+                title: "HEAD COACH",
+                players: [
+                    { name: "L. Enrique", flag: "🇪🇸", type: "gold", psgRating: 93, wikiQuery: "Luis Enrique" },
+                    { name: "L. Blanc", flag: "🇫🇷", type: "silver", psgRating: 79, wikiQuery: "Laurent Blanc" },
+                    { name: "Ancelotti", flag: "🇮🇹", type: "gold", psgRating: 79, wikiQuery: "Carlo Ancelotti" },
+                    { name: "Emery", flag: "🇪🇸", type: "silver", psgRating: 82, wikiQuery: "Unai Emery" },
+                    { name: "Pochettino", flag: "🇦🇷", type: "silver", psgRating: 69, wikiQuery: "Mauricio Pochettino" }
+                ]
+            }
+        };
+
+        let currentIndex = 0; let score = 0; let draggedCardHTML = null;
+        let draggedPlayer = null; // Joueur en cours de drag
+        let droppedPlayers = []; // Joueurs posés sur le terrain
+
+        const container = document.getElementById('cards-container');
+        const roleTitle = document.getElementById('current-role-title');
+        const counter = document.getElementById('counter');
+        const endMessage = document.getElementById('end-message');
+        const dropZones = document.querySelectorAll('.drop-zone');
+        const aiModal = document.getElementById('ai-rating-modal');
+
+        function init() {
+            currentIndex = 0; score = 0; droppedPlayers = []; updateCounter();
+            endMessage.classList.remove('show');
+            aiModal.classList.remove('show');
+            document.getElementById('ai-rank').classList.remove('reveal');
+            document.getElementById('ai-details').classList.remove('reveal');
+            dropZones.forEach(zone => { zone.innerHTML = ''; zone.classList.remove('filled', 'active-target'); });
+            renderStep();
+        }
+
+        function updateCounter() { counter.innerText = `${score} / 12`; }
+
+        function renderStep() {
+            if (currentIndex >= sequence.length) { triggerAIRating(); return; }
+            const currentId = sequence[currentIndex];
+            const data = playerData[currentId];
+            
+            dropZones.forEach(z => z.classList.remove('active-target'));
+            document.getElementById(`drop-${currentId}`).classList.add('active-target');
+            roleTitle.innerText = data.title;
+            container.innerHTML = '';
+
+            data.players.forEach((player, idx) => {
+                const card = document.createElement('div');
+                card.className = `fut-card ${player.type}`;
+                card.draggable = true; card.dataset.index = idx;
+                
+                const avatarFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(player.name)}&background=1a1a1a&color=fff&size=150&bold=true`;
+
+                card.innerHTML = `
+                    <div class="card-top-left">${player.flag}</div>
+                    <div class="card-image-container">
+                        <img id="img-${currentId}-${idx}" src="${avatarFallback}" alt="${player.name}" draggable="false">
+                    </div>
+                    <div class="card-name">${player.name}</div>
+                `;
+
+                fetch(`https://fr.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(player.wikiQuery)}&prop=pageimages&format=json&pithumbsize=250&origin=*`)
+                    .then(response => response.json())
+                    .then(apiData => {
+                        const pages = apiData.query.pages;
+                        const pageId = Object.keys(pages)[0];
+                        if (pageId !== "-1" && pages[pageId].thumbnail) {
+                            document.getElementById(`img-${currentId}-${idx}`).src = pages[pageId].thumbnail.source;
+                        }
+                    })
+                    .catch(err => console.log("Erreur API Wikipedia pour :", player.name));
+
+                card.addEventListener('dragstart', function(e) {
+                    this.classList.add('dragging');
+                    draggedPlayer = player; // On mémorise le joueur complet
+
+                    const currentImgSrc = this.querySelector('img').src;
+                    
+                    draggedCardHTML = `
+                        <div class="dropped-player">
+                            <img src="${currentImgSrc}" alt="${player.name}" draggable="false">
+                            <span>${player.name}</span>
+                        </div>
+                    `;
+                });
+                
+                card.addEventListener('dragend', function() { this.classList.remove('dragging'); });
+                container.appendChild(card);
+            });
+        }
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', e => { e.preventDefault(); });
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                const expectedId = sequence[currentIndex];
+                const targetId = this.dataset.id;
+                
+                if (targetId === expectedId && draggedCardHTML) {
+                    this.innerHTML = draggedCardHTML;
+                    this.classList.add('filled');
+                    this.classList.remove('active-target');
+
+                    droppedPlayers.push(draggedPlayer); // On mémorise le joueur posé
+                    score++; updateCounter(); currentIndex++; draggedCardHTML = null; draggedPlayer = null;
+                    setTimeout(renderStep, 300);
+                } else if (!this.classList.contains('filled')) {
+                    this.classList.remove('shake'); void this.offsetWidth; this.classList.add('shake');
+                    setTimeout(() => { this.classList.remove('shake'); }, 400);
+                }
+            });
+        });
+
+        /* =========================================
+           SYSTÈME DE NOTATION IA (basé sur les joueurs)
+        ========================================= */
+        function triggerAIRating() {
+            roleTitle.innerText = "CALCULATING...";
+            container.innerHTML = '';
+
+            // Moyenne des notes PSG de chaque joueur choisi
+            const total = droppedPlayers.reduce((sum, p) => sum + p.psgRating, 0);
+            const finalScore = Math.round(total / droppedPlayers.length);
+
+            const best  = droppedPlayers.reduce((a, b) => a.psgRating > b.psgRating ? a : b);
+            const worst = droppedPlayers.reduce((a, b) => a.psgRating < b.psgRating ? a : b);
+
+            aiModal.classList.add('show');
+            const scoreEl  = document.getElementById('ai-score');
+            const rankEl   = document.getElementById('ai-rank');
+            const detailEl = document.getElementById('ai-details');
+
+            document.getElementById('ai-best').innerText  = `${best.flag} ${best.name} (${best.psgRating})`;
+            document.getElementById('ai-worst').innerText = `${worst.flag} ${worst.name} (${worst.psgRating})`;
+
+            let currentNumber = 0;
+
+            const interval = setInterval(() => {
+                currentNumber += Math.floor(Math.random() * 5) + 2;
+
+                if (currentNumber >= finalScore) {
+                    currentNumber = finalScore;
+                    clearInterval(interval);
+
+                    if (finalScore >= 90) {
+                        rankEl.innerText = "S+ TIER — LÉGENDAIRE";
+                        rankEl.style.color = "#FFDF00";
+                    } else if (finalScore >= 85) {
+                        rankEl.innerText = "S TIER — MASTERCLASS";
+                        rankEl.style.color = "#E30613";
+                    } else if (finalScore >= 80) {
+                        rankEl.innerText = "A+ TIER — EXCELLENTE";
+                        rankEl.style.color = "#4fc3f7";
+                    } else if (finalScore >= 75) {
+                        rankEl.innerText = "A TIER — TRÈS SOLIDE";
+                        rankEl.style.color = "#004170";
+                    } else {
+                        rankEl.innerText = "B TIER — HONORABLE";
+                        rankEl.style.color = "#888";
+                    }
+
+                    rankEl.classList.add('reveal');
+                    detailEl.classList.add('reveal');
+
+                    setTimeout(() => {
+                        aiModal.classList.remove('show');
+                        setTimeout(triggerVictory, 400);
+                    }, 3000);
+                }
+
+                scoreEl.innerText = currentNumber;
+            }, 30);
+        }
+
+        function triggerVictory() {
+            roleTitle.innerText = "TEAM COMPLETE !"; 
+            endMessage.classList.add('show');
+            const end = Date.now() + 3 * 1000; const colors = ['#004170', '#E30613'];
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        document.getElementById('btn-reset').addEventListener('click', init);
+        init();
+    </script>
+</body>
+</html>
